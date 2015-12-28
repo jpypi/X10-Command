@@ -146,6 +146,13 @@ def Reload(what):
         print "Error: %s is an invalid option!"%what
 
 
+def IsValidUnitAddress(value):
+    try:
+        return value[0].isalpha() and 0 < int(value[1:]) < 17
+    except:
+        return False
+
+
 def ParseManualCommand(hc, *args):
     """
     do is for manually controlling X10 units.
@@ -167,20 +174,27 @@ def ParseManualCommand(hc, *args):
             a number from -100 to 100 representing a power percentage
               (Positive will brighten and negative will dim.)
     """
-    arg_count=len(args)
+    arg_count = len(args)
     
-    hc=hc.upper()
-    cmd=map(lambda s:s.upper(),args)
+    hc = hc.upper()
+    cmd = map(lambda s:s.upper(), args)
     
-    house_code=hc[0]
-    if hc[1:].isdigit():
-        conn.SendAddr(hc)
+    house_code = hc[0]
 
-    elif arg_count>1 and len(hc)==1 and hc in "ABCDEFGHIJKLMNOP":
-        for a in cmd[0].split(","):
-            if a.isdigit():
-                conn.SendAddr(house_code+a)
-            
+    # Check if this is a whole address
+    if IsValidUnitAddress(hc):
+        conn.SendAddr(hc)
+    # ...or just a house code letter (arg_count > 1 -> unit codes + command)
+    elif arg_count > 1 and len(hc) == 1 and hc in "ABCDEFGHIJKLMNOP":
+        # Parse the next part as if it were numbers which would
+        # complete the address
+        for n in cmd[0].split(","):
+            if n.isdigit() and 0 < int(n) < 17:
+                conn.SendAddr(house_code + n)
+            else:
+                print "Warning: %s is an invalid unit code"%n
+    
+    # Make sure there is a command to process
     if arg_count > 0:
         if cmd[-1] in ("ON", "OFF", "ALL"):
             conn.SendFunc(house_code + " " + cmd[-1], 0)
@@ -190,14 +204,16 @@ def ParseManualCommand(hc, *args):
             percent = (abs(dim_bright_val) / 100.0) * 22
 
             if dim_bright_val < 0:
-                conn.SendFunc(house_code+" dim", percent)
+                conn.SendFunc(house_code + " dim", percent)
 
             elif dim_bright_val > 0:
-                conn.SendFunc(house_code+" bright",percent)
+                conn.SendFunc(house_code + " bright", percent)
+
         else:
             print "Error: Command must be ON or OFF and dim/bright level must be between -100% and 100%!"
         
 
+# All software should have this function.
 def Oink(times=1):
     """
     The oink command takes a single argument which is the
@@ -209,7 +225,7 @@ def Oink(times=1):
         oink [number_of_times]
     """
     
-    print "Oink"+" oink"*(int(times)-1)+"!"
+    print "Oink" + " oink" * (int(times) - 1) + "!"
     
 
 def Help(topic=None):
@@ -218,10 +234,12 @@ def Help(topic=None):
     Probably around version 2.2
     (c) James Jenkins 2012, 2013
     """
+
     if not topic:
         print "Avaliable commands are: "
         print "\n".join(map(lambda x:" "*3+x, filter(lambda c:c!="help", commands)))
         print "Type help command to get help with a specific command."
+
     elif topic in commands:
         print "Help for %s:"%topic
         print commands[topic].__doc__
@@ -283,7 +301,7 @@ def StatusRequest():
     conn.Write("\x8b")
     data=""
     for i in xrange(14):
-        data+=conn.Read()
+        data += conn.Read()
     print data
     d=map(lambda x:bin(ord(x)).replace("0b","").zfill(8),data)
     print d
