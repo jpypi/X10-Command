@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import interface
 import scripts
 import json
@@ -61,7 +61,7 @@ def SaveAndClose():
 
     print "Saving unit states..."
     try:
-        f=open("status.stat", "a")
+        f=open("data/status.stat", "a")
         f.write("\n")
         json.dump(state_mgr.states, f)
         f.close()

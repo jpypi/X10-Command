@@ -13,9 +13,9 @@ if os_name in ('posix',):
     port_name = "/dev/ttyUSB0"
 conn = interface.InterfaceCon(port_name, 4800)
 
-main_script = scripts.Script("commands.txt")
+main_script = scripts.Script("data/commands.txt")
 try:
-    f = open("status.stat", "r")
+    f = open("data/status.stat", "r")
     units_states = json.loads(f.read().split("\n")[1])
     f.close()
 except:
@@ -44,7 +44,7 @@ def UpdateX10():
 def SaveAndClose():
     main_script.SaveStates()
     try:
-        f = open("status.stat","a")
+        f = open("data/status.stat","a")
         f.write("\n")
         json.dump(units_states,f)
         f.close()

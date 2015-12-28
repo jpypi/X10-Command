@@ -43,7 +43,7 @@ class MainWindow(wx.Frame):
         self.script=script
         self.conn=conn
 
-        wx.Frame.__init__(self,parent,-1,"JX10 Control",size=size)
+        wx.Frame.__init__(self,parent,-1,"X10 Control",size=size)
         self.panel=wx.Panel(self,-1)
         self.notebook=wx.Notebook(self.panel,-1)
 
